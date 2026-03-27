@@ -123,7 +123,7 @@ class Process implements Runnable {
             System.out.println(Colors.RED + "  ✗ " + name + " was interrupted." + Colors.RESET);
         }
     }
-
+ 
     // Getter methods for process name, burst time, and remaining time
     public String getName() {
         return name;
