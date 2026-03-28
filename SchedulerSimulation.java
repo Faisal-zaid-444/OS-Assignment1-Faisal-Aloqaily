@@ -1,5 +1,7 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
@@ -30,6 +32,10 @@ class Process implements Runnable {
     private int timeQuantum; // Time slice (time quantum) allowed per CPU access (in milliseconds)
     private int remainingTime; // Time left for the process to finish its execution
     private int priority; // Priority of the process (1-5, where 5 is highest)
+
+    private long creationTime;  // NEW: time when process was created
+    private long waitingTime;   // NEW: total time spent waiting
+
     // Constructor to initialize the process with name, burst time, and time quantum
 public Process(String name, int burstTime, int timeQuantum, int priority) {
     this.name = name;
@@ -37,10 +43,14 @@ public Process(String name, int burstTime, int timeQuantum, int priority) {
     this.timeQuantum = timeQuantum;
     this.remainingTime = burstTime;
     this.priority = priority; // NEW: set priority
+    // Feature 3
+    this.creationTime = System.currentTimeMillis();
+    this.waitingTime = 0;
 }
     // This method will be called when the thread for this process is started
     @Override
     public void run() {
+        stopWaiting(); // Feature 3   
         // Simulate running for either the time quantum or remaining time, whichever is smaller
         int runTime = Math.min(timeQuantum, remainingTime); // Run for the smaller of the two times
         
@@ -123,7 +133,18 @@ public Process(String name, int burstTime, int timeQuantum, int priority) {
             System.out.println(Colors.RED + "  ✗ " + name + " was interrupted." + Colors.RESET);
         }
     }
- 
+    // Feature 3
+  public void startWaiting() {
+    this.creationTime = System.currentTimeMillis();
+}
+
+public void stopWaiting() {
+    this.waitingTime += System.currentTimeMillis() - creationTime;
+}
+
+public long getWaitingTime() {
+    return waitingTime;
+}
     // Getter methods for process name, burst time, and remaining time
     public String getName() {
         return name;
@@ -169,7 +190,7 @@ public class SchedulerSimulation {
         
         // Map to associate each thread with its respective process object
         Map<Thread, Process> processMap = new HashMap<>();
-        
+        List<Process> allProcesses = new ArrayList<>(); // Feature 3
         // Print simulation header with elegant formatting
         System.out.println("\n" + Colors.BOLD + Colors.BRIGHT_CYAN + 
                           "╔═══════════════════════════════════════════════════════════════════════════════════════╗" + 
@@ -205,7 +226,7 @@ public class SchedulerSimulation {
             
             // Create a new process object with a unique name, burst time, and the defined time quantum
            Process process = new Process("P" + i, burstTime, timeQuantum, priority);
-            
+           allProcesses.add(process); // Feature 3
             // Add the process to the ready queue and the map
             addProcessToQueue(process, processQueue, processMap);
         }
@@ -262,6 +283,7 @@ public class SchedulerSimulation {
             if (!process.isFinished()) {
                 // If the process still has remaining time, check if there are more processes in queue
                 if (!processQueue.isEmpty()) {
+                     process.startWaiting(); // Feature 3
                     // Re-enqueue the process to give it another chance to run in the next round
                     addProcessToQueue(process, processQueue, processMap);
                 } else {
@@ -281,6 +303,14 @@ public class SchedulerSimulation {
                           // Feature 2: Print total context switches at the end
         System.out.println(Colors.BOLD + Colors.BRIGHT_YELLOW +
           "  🔄 Total context switches: " + contextSwitches + Colors.RESET + "\n");
+          // Feature 3: Print waiting time summary
+        System.out.println(Colors.BOLD + Colors.BRIGHT_CYAN + 
+          "\n  📊 Waiting Time Summary:" + Colors.RESET);
+           for (Process p : allProcesses) {
+        System.out.println("  " + p.getName() + 
+            " | Burst: " + p.getBurstTime() + "ms" + 
+            " | Waited: " + p.getWaitingTime() + "ms");
+}
         System.out.println(Colors.BOLD + Colors.BRIGHT_GREEN + "║" + Colors.RESET + 
                           Colors.BG_GREEN + Colors.WHITE + Colors.BOLD + 
                           "                     ✓  ALL PROCESSES COMPLETED  ✓                            " + 
