@@ -141,14 +141,15 @@ public Process(String name, int burstTime, int timeQuantum, int priority) {
     public boolean isFinished() {
         return remainingTime <= 0;
     }
-
+    
     public int getPriority() {
     return priority;
 }
-
 }
 
 public class SchedulerSimulation {
+    
+    static int contextSwitches = 0;// Feature 2: Static counter to track total number of context switches
     public static void main(String[] args) {
         // ⚠️ IMPORTANT: Put your student ID here to seed the random number generator
         // This makes your output unique to you - DO NOT forget to change this!
@@ -201,6 +202,7 @@ public class SchedulerSimulation {
             // Random burst time for each process between timeQuantum/2 and 3*timeQuantum
             int burstTime = timeQuantum/2 + random.nextInt(2 * timeQuantum + 1);
             int priority = 1 + random.nextInt(5);
+            
             // Create a new process object with a unique name, burst time, and the defined time quantum
            Process process = new Process("P" + i, burstTime, timeQuantum, priority);
             
@@ -240,7 +242,9 @@ public class SchedulerSimulation {
             }
             System.out.println(Colors.BRIGHT_WHITE + "]" + Colors.RESET);
             System.out.println(Colors.BOLD + Colors.MAGENTA + "└" + "─".repeat(79) + Colors.RESET + "\n");
-            
+             
+            contextSwitches++; // Feature 2: Increment context switch counter
+
             // Start the thread, which will run the process for one time quantum
             currentThread.start();
             
@@ -274,6 +278,9 @@ public class SchedulerSimulation {
         System.out.println(Colors.BOLD + Colors.BRIGHT_GREEN + 
                           "╔════════════════════════════════════════════════════════════════════════════════╗" + 
                           Colors.RESET);
+                          // Feature 2: Print total context switches at the end
+        System.out.println(Colors.BOLD + Colors.BRIGHT_YELLOW +
+          "  🔄 Total context switches: " + contextSwitches + Colors.RESET + "\n");
         System.out.println(Colors.BOLD + Colors.BRIGHT_GREEN + "║" + Colors.RESET + 
                           Colors.BG_GREEN + Colors.WHITE + Colors.BOLD + 
                           "                     ✓  ALL PROCESSES COMPLETED  ✓                            " + 
